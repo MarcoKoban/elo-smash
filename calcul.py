@@ -85,11 +85,33 @@ def battle(elo_system, player1, player2, score, joueurs):
     joueurs[player1.name] = player1.rating, player1.set
     joueurs[player2.name] = player2.rating, player2.set
 
+def add_pseudo(joueurs):
+    conn = sqlite3.connect('ultimate_player_database.db')
+    c = conn.cursor()
+    for key in joueurs:
+        c.execute("SELECT * FROM players WHERE player_id = ?", (key,))
+        rows = c.fetchall()
+        for row in rows:
+            joueurs[key] = joueurs[key], row[2]
+    conn.close()
+
+def sort_by_elo(joueurs):
+    return sorted(joueurs.items(), key=lambda x: x[1][0][0], reverse=True)
+
+def print_player(joueurs):
+    count = 1
+    for x in range(len(joueurs)):
+        print(count, "{:.0f}".format(joueurs[x][1][0][0]), joueurs[x][1][1])
+        count += 1
+
 def main():
     elo_system = elo.EloSystem()
     joueurs = {}
     elo_tournament("king-of-the-hive__l-hexagone-1", elo_system, joueurs)
-    print(joueurs)
+    elo_tournament("king-of-the-hive-2__l-hexagone", elo_system, joueurs)
+    add_pseudo(joueurs)
+    joueurs = sort_by_elo(joueurs)
+    print_player(joueurs)
 
 if __name__ == "__main__":
     sys.exit(main())
