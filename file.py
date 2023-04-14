@@ -8,15 +8,15 @@ def find_file_txt():
                 return file
 
 def read_file(file):
-    contenu = []
+    content = []
     try:
-        with open(file, 'r') as fichier:
-            contenu = [ligne.strip() for ligne in fichier.readlines()]
+        with open(file, 'r') as file:
+            content = [line.strip() for line in file.readlines()]
     except FileNotFoundError:
-        print("Le fichier n'a pas été trouvé.")
+        print("The file was not found.")
     except Exception as e:
-        print(f"Une erreur s'est produite : {e}")
-    return contenu
+        print(f"An error occurred: {e}")
+    return content
 
 def convert_name_key_tournament(name, list):
     conn = sqlite3.connect('ultimate_player_database.db')

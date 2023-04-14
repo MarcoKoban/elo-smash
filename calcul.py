@@ -2,9 +2,8 @@ import sys
 import sqlite3
 import elo
 import file
-import os
 
-def elo_tournament(tournament, elo_system, joueurs):
+def elo_tournament(tournament, elo_system, player):
     conn = sqlite3.connect('ultimate_player_database.db')
     c = conn.cursor()
     c.execute("SELECT * FROM sets WHERE tournament_key = ?", (tournament,))
@@ -12,8 +11,8 @@ def elo_tournament(tournament, elo_system, joueurs):
     for row in rows:
         if (row[6] != -1 and row[7] != -1):
             score = recognize_winner(row[4], row[5], row[3])
-            create_profil(joueurs, str(row[4]), str(row[5]))
-            battle(elo_system, str(row[4]), str(row[5]), score, joueurs)
+            create_profil(player, str(row[4]), str(row[5]))
+            battle(elo_system, str(row[4]), str(row[5]), score, player)
     conn.close()
 
 def recognize_winner(ID1, ID2, winner):
@@ -24,57 +23,70 @@ def recognize_winner(ID1, ID2, winner):
     else:
         return 0
 
-def create_profil(joueurs, player1, player2):
-    if player1 not in joueurs:
-        joueur1 = elo.Player(player1, 1200, 0)
-        joueurs[player1] = joueur1.rating, joueur1.set
-    if player2 not in joueurs:
-        joueur2 = elo.Player(player2, 1200, 0)
-        joueurs[player2] = joueur2.rating, joueur2.set
+def create_profil(player, player1, player2):
+    if player1 not in player:
+        gamer1 = elo.Player(player1, 1200, 0)
+        player[player1] = gamer1.rating, gamer1.set
+    if player2 not in player:
+        gamer2 = elo.Player(player2, 1200, 0)
+        player[player2] = gamer2.rating, gamer2.set
 
-def battle(elo_system, player1, player2, score, joueurs):
-    player1 = elo.Player(player1, joueurs[player1][0], joueurs[player1][1])
-    player2 = elo.Player(player2, joueurs[player2][0], joueurs[player2][1])
+def battle(elo_system, player1, player2, score, player):
+    player1 = elo.Player(player1, player[player1][0], player[player1][1])
+    player2 = elo.Player(player2, player[player2][0], player[player2][1])
     elo_system.update_rating(player1, player2, score)
-    joueurs[player1.name] = player1.rating, player1.set
-    joueurs[player2.name] = player2.rating, player2.set
+    player[player1.name] = player1.rating, player1.set
+    player[player2.name] = player2.rating, player2.set
 
-def add_pseudo(joueurs):
+def add_pseudo(player):
     conn = sqlite3.connect('ultimate_player_database.db')
     c = conn.cursor()
-    for key in joueurs:
+    for key in player:
         c.execute("SELECT * FROM players WHERE player_id = ?", (key,))
         rows = c.fetchall()
         for row in rows:
-            joueurs[key] = joueurs[key], row[2]
+            player[key] = player[key], row[2]
     conn.close()
 
-def sort_by_elo(joueurs):
-    return sorted(joueurs.items(), key=lambda x: x[1][0][0], reverse=True)
+def sort_by_elo(player):
+    return sorted(player.items(), key=lambda x: x[1][0][0], reverse=True)
 
-def print_player(joueurs):
+def print_player(player):
     count = 1
-    for x in range(len(joueurs)):
-        print(count, "{:.0f}".format(joueurs[x][1][0][0]), joueurs[x][1][1])
+    for x in range(len(player)):
+        print(count, "{:.0f}".format(player[x][1][0][0]), player[x][1][1])
         count += 1
 
 def tournament(list, elo_system):
-    joueurs = {}
+    player = {}
     for x in range(len(list)):
-        elo_tournament(list[x], elo_system, joueurs)
-    add_pseudo(joueurs)
-    joueurs = sort_by_elo(joueurs)
-    print_player(joueurs)
+        elo_tournament(list[x], elo_system, player)
+    add_pseudo(player)
+    player = sort_by_elo(player)
+    player = check_same_name(player)
+    print_player(player)
+
+def check_same_name(player):
+    to_remove = []
+    for x in range(len(player)):
+        for y in range(x + 1, len(player)):
+            if player[x][1][1] == player[y][1][1]:
+                new_set = player[x][1][0][1] + player[y][1][0][1]
+                new_elo = ((player[x][1][0][0] + player[y][1][0][0]) / 2)
+                player[x] = (player[x][0], ((new_elo, new_set), player[x][1][1]))
+                to_remove.append(y)
+    for index in sorted(to_remove, reverse=True):
+        del player[index]
+    return player
 
 def main():
-    new_file = file.find_file_txt() ## trouve le premier fichier txt
-    elo_system = elo.EloSystem() ## initialise le système d'élo
-    name_tournament = file.read_file(new_file) ## lit le fichier txt et le stock dans une liste
+    new_file = file.find_file_txt() ## find the file txt
+    elo_system = elo.EloSystem() ## create the elo system
+    name_tournament = file.read_file(new_file) ## read the file txt and return a list of tournament name
     list = []
-    for x in range(len(name_tournament)): ## converti le nom du tournoi en clé du tournoi
+    for x in range(len(name_tournament)): ## convert the tournament name to the tournament key
         list = file.convert_name_key_tournament(name_tournament[x], list)
-    tournament(list, elo_system) ## lance le calcul d'elo
-
+    tournament(list, elo_system) ## calculate the elo of each player in the tournament
 
 if __name__ == "__main__":
     sys.exit(main())
