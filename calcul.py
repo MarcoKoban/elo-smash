@@ -1,55 +1,7 @@
 import sys
 import sqlite3
 import elo
-
-def number_tournament(ID):
-    conn = sqlite3.connect('ultimate_player_database.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM tournament_info")
-    rows = c.fetchall()
-    count = 0
-    for x in range(len(rows)):
-        if ID in rows[x][15]:
-            count += 1
-    print(count)
-    conn.close()
-    return count
-
-def print_tournament(ID):
-    conn = sqlite3.connect('ultimate_player_database.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM tournament_info")
-    rows = c.fetchall()
-    for x in range(len(rows)):
-        if ID in rows[x][15]:
-            print(rows[x][2])
-    conn.close()
-
-def nbr_set(ID):
-    conn = sqlite3.connect('ultimate_player_database.db')
-    c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM sets WHERE (p1_id = ? OR p2_id = ?) AND p1_score != -1 AND p2_score != -1", (ID, ID))
-    count = c.fetchone()[0]
-    conn.close()
-    return count
-
-def nbr_win(ID):
-    conn = sqlite3.connect('ultimate_player_database.db')
-    c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM sets WHERE winner_id = ? AND p1_score != -1 AND p2_score != -1", (ID,))
-    count = c.fetchone()[0]
-    conn.close()
-    return count
-
-def nbr_loss(set, win):
-    return set - win
-
-def pourcent_win(set, win):
-    if set == 0:
-        return 0
-    else:
-        pourcentage = (win / set) * 100
-        return round(pourcentage, 2)
+import os
 
 def elo_tournament(tournament, elo_system, joueurs):
     conn = sqlite3.connect('ultimate_player_database.db')
@@ -104,11 +56,34 @@ def print_player(joueurs):
         print(count, "{:.0f}".format(joueurs[x][1][0][0]), joueurs[x][1][1])
         count += 1
 
+def read_file(file, elo_system, joueurs):
+    try:
+        with open(file, 'r') as f:
+            lignes = f.readlines()
+            if not lignes:
+                return None
+            for ligne in lignes:
+                ligne = ligne.strip()
+                elo_tournament(str(ligne), elo_system, joueurs)
+        return True
+    except FileNotFoundError:
+        print("Le fichier n'existe pas")
+        return None
+    except Exception as e:
+        print("Une erreur est survenue : ", str(e))
+        return None
+
+def find_file_txt():
+    for root, dirs, files in os.walk("."):
+        for file in files:
+            if file.endswith(".txt"):
+                return file
+
 def main():
+    file = find_file_txt()
     elo_system = elo.EloSystem()
     joueurs = {}
-    elo_tournament("king-of-the-hive__l-hexagone-1", elo_system, joueurs)
-    elo_tournament("king-of-the-hive-2__l-hexagone", elo_system, joueurs)
+    read_file(file, elo_system, joueurs)
     add_pseudo(joueurs)
     joueurs = sort_by_elo(joueurs)
     print_player(joueurs)
