@@ -56,22 +56,13 @@ def print_player(joueurs):
         print(count, "{:.0f}".format(joueurs[x][1][0][0]), joueurs[x][1][1])
         count += 1
 
-def read_file(file, elo_system, joueurs):
-    try:
-        with open(file, 'r') as f:
-            lignes = f.readlines()
-            if not lignes:
-                return None
-            for ligne in lignes:
-                ligne = ligne.strip()
-                elo_tournament(str(ligne), elo_system, joueurs)
-        return True
-    except FileNotFoundError:
-        print("Le fichier n'existe pas")
-        return None
-    except Exception as e:
-        print("Une erreur est survenue : ", str(e))
-        return None
+def tournament(list, elo_system):
+    joueurs = {}
+    for x in range(len(list)):
+        elo_tournament(list[x], elo_system, joueurs)
+    add_pseudo(joueurs)
+    joueurs = sort_by_elo(joueurs)
+    print_player(joueurs)
 
 def find_file_txt():
     for root, dirs, files in os.walk("."):
@@ -79,14 +70,36 @@ def find_file_txt():
             if file.endswith(".txt"):
                 return file
 
+def read_file(file):
+    contenu = []
+    try:
+        with open(file, 'r') as fichier:
+            contenu = [ligne.strip() for ligne in fichier.readlines()]
+    except FileNotFoundError:
+        print("Le fichier n'a pas été trouvé.")
+    except Exception as e:
+        print(f"Une erreur s'est produite : {e}")
+    return contenu
+
+def convert_name_key_tournament(name, list):
+    conn = sqlite3.connect('ultimate_player_database.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM tournament_info WHERE cleaned_name = ?", (name,))
+    rows = c.fetchall()
+    for row in rows:
+        list.append(row[1])
+    conn.close()
+    return list
+
 def main():
-    file = find_file_txt()
-    elo_system = elo.EloSystem()
-    joueurs = {}
-    read_file(file, elo_system, joueurs)
-    add_pseudo(joueurs)
-    joueurs = sort_by_elo(joueurs)
-    print_player(joueurs)
+    file = find_file_txt() ## trouve le premier fichier txt
+    elo_system = elo.EloSystem() ## initialise le système d'élo
+    name_tournament = read_file(file) ## lit le fichier txt et le stock dans une liste
+    list = []
+    for x in range(len(name_tournament)): ## converti le nom du tournoi en clé du tournoi
+        list = convert_name_key_tournament(name_tournament[x], list)
+    tournament(list, elo_system) ## lance le calcul d'elo
+
 
 if __name__ == "__main__":
     sys.exit(main())
