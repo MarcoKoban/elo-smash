@@ -10,7 +10,7 @@ def find_file_txt():
 def read_file(file):
     content = []
     try:
-        with open(file, 'r') as file:
+        with open(file, 'r', encoding='utf-8') as file:
             content = [line.strip() for line in file.readlines()]
     except FileNotFoundError:
         print("The file was not found.")
