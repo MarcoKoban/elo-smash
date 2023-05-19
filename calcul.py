@@ -38,14 +38,24 @@ def battle(elo_system, player1, player2, score, player):
     player[player1.name] = player1.rating, player1.set
     player[player2.name] = player2.rating, player2.set
 
-def add_pseudo(player):
+def add_informations(player):
     conn = sqlite3.connect('ultimate_player_database.db')
     c = conn.cursor()
     for key in player:
         c.execute("SELECT * FROM players WHERE player_id = ?", (key,))
         rows = c.fetchall()
         for row in rows:
-            player[key] = player[key], row[2]
+            player[key] = player[key], row[2], row[9], row[13]
+    conn.close()
+
+def add_nationality(player):
+    conn = sqlite3.connect('ultimate_player_database.db')
+    c = conn.cursor()
+    for key in player:
+        c.execute("SELECT * FROM players WHERE player_id = ?", (key,))
+        rows = c.fetchall()
+        for row in rows:
+            player[key][3] = player[key], row[2]
     conn.close()
 
 def sort_by_elo(player):
@@ -56,15 +66,6 @@ def print_player(player):
     for x in range(len(player)):
         print(count, "{:.0f}".format(player[x][1][0][0]), player[x][1][1])
         count += 1
-
-def tournament(list, elo_system):
-    player = {}
-    for x in range(len(list)):
-        elo_tournament(list[x], elo_system, player)
-    add_pseudo(player)
-    player = sort_by_elo(player)
-    player = check_same_name(player)
-    print_player(player)
 
 def check_same_name(player):
     to_remove = []
@@ -78,6 +79,15 @@ def check_same_name(player):
     for index in sorted(to_remove, reverse=True):
         del player[index]
     return player
+
+def tournament(list, elo_system):
+    player = {}
+    for x in range(len(list)):
+        elo_tournament(list[x], elo_system, player)
+    add_informations(player)
+    player = sort_by_elo(player)
+    player = check_same_name(player)
+    print_player(player)
 
 def main():
     new_file = file.find_file_txt() ## find the file txt
