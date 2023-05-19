@@ -2,6 +2,7 @@ import sys
 import sqlite3
 import elo
 import file
+import ast
 
 def elo_tournament(tournament, elo_system, player):
     conn = sqlite3.connect('ultimate_player_database.db')
@@ -48,24 +49,25 @@ def add_informations(player):
             player[key] = player[key], row[2], row[9], row[13]
     conn.close()
 
-def add_nationality(player):
-    conn = sqlite3.connect('ultimate_player_database.db')
-    c = conn.cursor()
-    for key in player:
-        c.execute("SELECT * FROM players WHERE player_id = ?", (key,))
-        rows = c.fetchall()
-        for row in rows:
-            player[key][3] = player[key], row[2]
-    conn.close()
-
 def sort_by_elo(player):
     return sorted(player.items(), key=lambda x: x[1][0][0], reverse=True)
 
 def print_player(player):
     count = 1
     for x in range(len(player)):
-        print(count, "{:.0f}".format(player[x][1][0][0]), player[x][1][1])
+        print(count, "{:.0f}".format(player[x][1][0][0]), player[x][1][1], player[x][1][2])
         count += 1
+
+def fusion_character(*tuples):
+    liste_commune = {}
+    for tpl in tuples:
+        for key, value in ast.literal_eval(tpl).items():
+            if key in liste_commune:
+                liste_commune[key] += value
+            else:
+                liste_commune[key] = value
+    print(liste_commune)
+    return liste_commune
 
 def check_same_name(player):
     to_remove = []
@@ -74,11 +76,21 @@ def check_same_name(player):
             if player[x][1][1] == player[y][1][1]:
                 new_set = player[x][1][0][1] + player[y][1][0][1]
                 new_elo = ((player[x][1][0][0] + player[y][1][0][0]) / 2)
-                player[x] = (player[x][0], ((new_elo, new_set), player[x][1][1]))
+                new_character = fusion_character(player[x][1][3], player[y][1][3])
+                player[x] = (player[x][0], ((new_elo, new_set), player[x][1][1], player[x][1][2], new_character))
                 to_remove.append(y)
     for index in sorted(to_remove, reverse=True):
         del player[index]
     return player
+
+def modify_tuple(player):
+    x = 1
+    for i in player:
+        if not i[1][3]:
+            print("no character", x)
+        else:
+            print(x, i[1][3])
+        x += 1
 
 def tournament(list, elo_system):
     player = {}
