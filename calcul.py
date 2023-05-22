@@ -4,6 +4,7 @@ import elo
 import file
 import ast
 import json
+import re
 
 def elo_tournament(tournament, elo_system, player):
     conn = sqlite3.connect('ultimate_player_database.db')
@@ -56,16 +57,7 @@ def sort_by_elo(player):
 def print_player(player):
     count = 1
     for x in range(len(player)):
-        formatted_value = player[x][1][3]
-        formatted_value = json.dumps(formatted_value)
-        formatted_value = formatted_value.replace('"', '')
-        formatted_value = formatted_value.replace('{', '')
-        formatted_value = formatted_value.replace('}', '')
-        formatted_value = formatted_value.replace(':', '')
-        formatted_value = formatted_value.split(',')
-        formatted_value = [value.strip().split()[0] for value in formatted_value]
-        formatted_value = ' '.join(formatted_value)
-        print(count, "{:.0f}".format(player[x][1][0][0]), player[x][1][1], player[x][1][2], formatted_value)
+        print(count, "{:.0f}".format(player[x][1][0][0]), player[x][1][1], player[x][1][2], player[x][1][3])
         count += 1
 
 def fusion_character(*tuples):
@@ -76,7 +68,6 @@ def fusion_character(*tuples):
                 liste_commune[key] += value
             else:
                 liste_commune[key] = value
-    print(liste_commune)
     return liste_commune
 
 def check_same_name(player):
@@ -118,6 +109,17 @@ def modify_data(char, data):
         data_list[x][1] = tuple(inner_list)
     return tuple(data_list)
 
+def clean_data(data):
+    cleaned_data = []
+    for item in data:
+        cleaned_item = ""
+        for key, value in item.items():
+            cleaned_key = re.sub(r'[{}0-9:,\'\"]', '', key)
+            cleaned_value = re.sub(r'[{}0-9:,\'\"]', '', str(value))
+            cleaned_item += cleaned_key + " " + cleaned_value
+        cleaned_data.append(cleaned_item.strip())
+    return cleaned_data
+
 def tournament(list, elo_system):
     player = {}
     for x in range(len(list)):
@@ -131,9 +133,9 @@ def tournament(list, elo_system):
         char.append(modifier_tuple(player[x][1][3]))
         x += 1
     char = filter_data(char)
+    char = clean_data(char)
     test = modify_data(char, player)
     print_player(test)
-    print(test[0][1][3])
 
 def main():
     new_file = file.find_file_txt() ## find the file txt
