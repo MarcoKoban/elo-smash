@@ -3,6 +3,7 @@ import sqlite3
 import elo
 import file
 import ast
+import json
 
 def elo_tournament(tournament, elo_system, player):
     conn = sqlite3.connect('ultimate_player_database.db')
@@ -55,7 +56,16 @@ def sort_by_elo(player):
 def print_player(player):
     count = 1
     for x in range(len(player)):
-        print(count, "{:.0f}".format(player[x][1][0][0]), player[x][1][1], player[x][1][2])
+        formatted_value = player[x][1][3]
+        formatted_value = json.dumps(formatted_value)
+        formatted_value = formatted_value.replace('"', '')
+        formatted_value = formatted_value.replace('{', '')
+        formatted_value = formatted_value.replace('}', '')
+        formatted_value = formatted_value.replace(':', '')
+        formatted_value = formatted_value.split(',')
+        formatted_value = [value.strip().split()[0] for value in formatted_value]
+        formatted_value = ' '.join(formatted_value)
+        print(count, "{:.0f}".format(player[x][1][0][0]), player[x][1][1], player[x][1][2], formatted_value)
         count += 1
 
 def fusion_character(*tuples):
@@ -83,14 +93,30 @@ def check_same_name(player):
         del player[index]
     return player
 
-def modify_tuple(player):
-    x = 1
-    for i in player:
-        if not i[1][3]:
-            print("no character", x)
-        else:
-            print(x, i[1][3])
-        x += 1
+def modifier_tuple(data):
+    if isinstance(data, str):
+        data = ast.literal_eval(data)
+    modified_dict = {}
+    for key, value in data.items():
+        modified_key = key.split("/")[-1]
+        modified_dict[modified_key] = value
+    return modified_dict
+
+def filter_data(data):
+    result = []
+    for item in data:
+        highest_usage = max(item.values())
+        filtered_item = {character: usage for character, usage in item.items() if usage >= 0.3 * highest_usage}
+        result.append(filtered_item)    
+    return result
+
+def modify_data(char, data):
+    data_list = [list(item) for item in data]
+    for x, element in enumerate(char):
+        inner_list = list(data_list[x][1])
+        inner_list[3] = element
+        data_list[x][1] = tuple(inner_list)
+    return tuple(data_list)
 
 def tournament(list, elo_system):
     player = {}
@@ -99,7 +125,15 @@ def tournament(list, elo_system):
     add_informations(player)
     player = sort_by_elo(player)
     player = check_same_name(player)
-    print_player(player)
+    x = 0
+    char = []
+    while x < len(player):
+        char.append(modifier_tuple(player[x][1][3]))
+        x += 1
+    char = filter_data(char)
+    test = modify_data(char, player)
+    print_player(test)
+    print(test[0][1][3])
 
 def main():
     new_file = file.find_file_txt() ## find the file txt
