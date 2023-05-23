@@ -20,6 +20,16 @@ def display_tag(lst, window, scroll):
         window.blit(text, (x, y))
         y += interval
 
+def display_elo(lst, window, scroll):
+    font = pygame.font.Font(None, 48)
+    x = 400
+    y = 20 - scroll
+    interval = 30
+    for i in range(len(lst)):
+        text = font.render(str(int(lst[i][1][0][0])), True, (0, 0, 0))
+        window.blit(text, (x, y))
+        y += interval
+
 def scrolling(scroll_speed, scroll, height):
     keys = pygame.key.get_pressed()
     if keys[pygame.K_UP]:
@@ -53,6 +63,7 @@ def game(lst):
         window.blit(image, (0, 0))
         display_placement(lst, window, scroll)
         display_tag(lst, window, scroll)
+        display_elo(lst, window, scroll)
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
