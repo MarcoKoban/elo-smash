@@ -76,16 +76,16 @@ def display_character(lst, window, scroll, loaded_images):
             window.blit(image, (x, y))
         y += interval
 
-def scrolling(scroll_speed, scroll, height):
+def scrolling(scroll_speed, scroll, height, length):
     keys = pygame.key.get_pressed()
     if keys[pygame.K_UP]:
         scroll -= scroll_speed * 2
     if keys[pygame.K_DOWN]:
         scroll += scroll_speed * 2
     mouse = pygame.mouse.get_pos()
-    if mouse[1] >= height - 50:
+    if mouse[1] >= height - 50 and scroll < 30 * (length - 19): 
         scroll += scroll_speed * 2
-    if mouse[1] <= 50:
+    if mouse[1] <= 50 and scroll > 0:
         scroll -= scroll_speed * 2
     return scroll
 
@@ -99,21 +99,19 @@ def game(lst):
     scroll = 0
     scroll_speed = 10
     clock = pygame.time.Clock()
-
-    loaded_flag_images = load_images(lst)  # Preload flag images
-    loaded_character_images = load_character_images(lst)  # Preload character images
-
+    loaded_flag_images = load_images(lst)
+    loaded_character_images = load_character_images(lst)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        scroll = scrolling(scroll_speed, scroll, height)
+        scroll = scrolling(scroll_speed, scroll, height, len(lst))
         window.fill((255, 255, 255))
         display_placement(lst, window, scroll)
         display_tag(lst, window, scroll)
         display_elo(lst, window, scroll)
-        display_flag(lst, window, scroll, loaded_flag_images)  # Pass the loaded flag images
-        display_character(lst, window, scroll, loaded_character_images)  # Pass the loaded character images
+        display_flag(lst, window, scroll, loaded_flag_images)
+        display_character(lst, window, scroll, loaded_character_images)
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()

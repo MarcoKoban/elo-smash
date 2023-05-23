@@ -3,8 +3,8 @@ import sqlite3
 import elo
 import file
 import ast
-import json
 import re
+import display_score
 
 def elo_tournament(tournament, elo_system, player):
     conn = sqlite3.connect('ultimate_player_database.db')
@@ -120,6 +120,17 @@ def clean_data(data):
         cleaned_data.append(cleaned_item.strip())
     return cleaned_data
 
+def split_character_data(data):
+    split_data = []
+    for item in data:
+        item = list(item)
+        character_info = list(item[1])
+        character_info[3] = character_info[3].split(" ")
+        item[1] = tuple(character_info)
+        item = tuple(item)
+        split_data.append(item)
+    return tuple(split_data)
+
 def tournament(list, elo_system):
     player = {}
     for x in range(len(list)):
@@ -134,17 +145,17 @@ def tournament(list, elo_system):
         x += 1
     char = filter_data(char)
     char = clean_data(char)
-    test = modify_data(char, player)
-    print_player(test)
+    char = modify_data(char, player)
+    #print_player(char)
+    char = split_character_data(char)
+    display_score.game(char)
 
 def main():
     new_file = file.find_file_txt() ## find the file txt
-    elo_system = elo.EloSystem() ## create the elo system
     name_tournament = file.read_file(new_file) ## read the file txt and return a list of tournament name
-    list = []
-    for x in range(len(name_tournament)): ## convert the tournament name to the tournament key
-        list = file.convert_name_key_tournament(name_tournament[x], list)
-    tournament(list, elo_system) ## calculate the elo of each player in the tournament
+    elo_system = elo.EloSystem() ## create the elo system
+    tournament_list = file.convert_name_key_tournaments(name_tournament)
+    tournament(tournament_list, elo_system) ## calculate the elo of each player in the tournament
 
 if __name__ == "__main__":
     sys.exit(main())
