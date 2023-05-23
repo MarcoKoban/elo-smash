@@ -5,9 +5,18 @@ def display_placement(lst, window, scroll):
     x = 0
     y = 20 - scroll
     interval = 30
-    i = 1
     for i in range(len(lst)):
-        text = font.render(str(i), True, (0, 0, 0))
+        text = font.render(str(i + 1), True, (0, 0, 0))
+        window.blit(text, (x, y))
+        y += interval
+
+def display_tag(lst, window, scroll):
+    font = pygame.font.Font(None, 48)
+    x = 80
+    y = 20 - scroll
+    interval = 30
+    for i in range(len(lst)):
+        text = font.render(lst[i][1][1], True, (0, 0, 0))
         window.blit(text, (x, y))
         y += interval
 
@@ -43,6 +52,7 @@ def game(lst):
         window.fill((255, 255, 255))
         window.blit(image, (0, 0))
         display_placement(lst, window, scroll)
+        display_tag(lst, window, scroll)
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
