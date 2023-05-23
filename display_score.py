@@ -1,5 +1,31 @@
 import pygame
 
+def load_images(lst):
+    loaded_images = []
+    for item in lst:
+        try:
+            image_path = f"PNG-128/{item[1][2]}-128.png"
+            image = pygame.image.load(image_path)
+            image = pygame.transform.scale(image, (16, 16))
+            loaded_images.append(image)
+        except pygame.error:
+            print(f"Unable to load the image {item[1][2]}.")
+            loaded_images.append(None)
+    return loaded_images
+
+def load_character_images(lst):
+    loaded_images = []
+    for item in lst:
+        try:
+            image_path = f"character_sprite/{item[1][3][0]}.png"
+            image = pygame.image.load(image_path)
+            image = pygame.transform.scale(image, (32, 32))
+            loaded_images.append(image)
+        except pygame.error:
+            print(f"Unable to load the image {item[1][3][0]}.")
+            loaded_images.append(None)
+    return loaded_images
+
 def display_placement(lst, window, scroll):
     font = pygame.font.Font(None, 48)
     x = 0
@@ -30,6 +56,26 @@ def display_elo(lst, window, scroll):
         window.blit(text, (x, y))
         y += interval
 
+def display_flag(lst, window, scroll, loaded_images):
+    x = 550
+    y = 20 - scroll
+    interval = 30
+    for i in range(len(lst)):
+        image = loaded_images[i]
+        if image is not None:
+            window.blit(image, (x, y))
+        y += interval
+
+def display_character(lst, window, scroll, loaded_images):
+    x = 600
+    y = 20 - scroll
+    interval = 30
+    for i in range(len(lst)):
+        image = loaded_images[i]
+        if image is not None:
+            window.blit(image, (x, y))
+        y += interval
+
 def scrolling(scroll_speed, scroll, height):
     keys = pygame.key.get_pressed()
     if keys[pygame.K_UP]:
@@ -49,21 +95,25 @@ def game(lst):
     height = 600
     window = pygame.display.set_mode((width, height))
     pygame.display.set_caption("SSBU Power Ranking")
-    image = pygame.image.load("character_sprite/bayonetta.png")
     running = True
     scroll = 0
     scroll_speed = 10
     clock = pygame.time.Clock()
+
+    loaded_flag_images = load_images(lst)  # Preload flag images
+    loaded_character_images = load_character_images(lst)  # Preload character images
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
         scroll = scrolling(scroll_speed, scroll, height)
         window.fill((255, 255, 255))
-        window.blit(image, (0, 0))
         display_placement(lst, window, scroll)
         display_tag(lst, window, scroll)
         display_elo(lst, window, scroll)
+        display_flag(lst, window, scroll, loaded_flag_images)  # Pass the loaded flag images
+        display_character(lst, window, scroll, loaded_character_images)  # Pass the loaded character images
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
