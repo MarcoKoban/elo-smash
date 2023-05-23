@@ -18,12 +18,23 @@ def read_file(file):
         print(f"An error occurred: {e}")
     return content
 
-def convert_name_key_tournament(name, list):
+def convert_name_key_tournaments(names):
     conn = sqlite3.connect('ultimate_player_database.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM tournament_info WHERE cleaned_name = ?", (name,))
-    rows = c.fetchall()
-    for row in rows:
-        list.append(row[1])
+    query = "SELECT * FROM tournament_info WHERE cleaned_name = ?"
+
+    tournament_list = []
+
+    for name in names:
+        c.execute(query, (name,))
+        rows = c.fetchall()
+        if len(rows) == 0:
+            print("The tournament {} is not in the database.".format(name))
+        else:
+            for row in rows:
+                tournament_list.append(row[1])
+
     conn.close()
-    return list
+
+    return tournament_list
+

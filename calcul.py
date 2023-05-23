@@ -51,8 +51,11 @@ def add_informations(player):
             player[key] = player[key], row[2], row[9], row[13]
     conn.close()
 
-def sort_by_elo(player):
-    return sorted(player.items(), key=lambda x: x[1][0][0], reverse=True)
+def sort_by_elo(player, x):
+    if x == 0:
+        return sorted(player.items(), key=lambda x: x[1][0][0], reverse=True)
+    else:
+        return sorted(player, key=lambda x: x[1][0][0], reverse=True)
 
 def print_player(player):
     count = 1
@@ -77,7 +80,15 @@ def check_same_name(player):
             if player[x][1][1] == player[y][1][1]:
                 new_set = player[x][1][0][1] + player[y][1][0][1]
                 new_elo = ((player[x][1][0][0] + player[y][1][0][0]) / 2)
-                new_character = fusion_character(player[x][1][3], player[y][1][3])
+                if player[x][1][3] == '""' or player[y][1][3] == '""':
+                    if player[x][1][3] == '""':
+                        new_character = player[y][1][3]
+                    elif player[y][1][3] == '""':
+                        new_character = player[x][1][3]
+                    else:
+                        new_character = fusion_character(player[0][1][3], player[0][1][3])
+                else:
+                    new_character = fusion_character(player[x][1][3], player[y][1][3])
                 player[x] = (player[x][0], ((new_elo, new_set), player[x][1][1], player[x][1][2], new_character))
                 to_remove.append(y)
     for index in sorted(to_remove, reverse=True):
@@ -88,9 +99,12 @@ def modifier_tuple(data):
     if isinstance(data, str):
         data = ast.literal_eval(data)
     modified_dict = {}
-    for key, value in data.items():
-        modified_key = key.split("/")[-1]
-        modified_dict[modified_key] = value
+    try:
+        for key, value in data.items():
+            modified_key = key.split("/")[-1]
+            modified_dict[modified_key] = value
+    except AttributeError:
+        modified_dict["mario"] = 1
     return modified_dict
 
 def filter_data(data):
@@ -136,8 +150,9 @@ def tournament(list, elo_system):
     for x in range(len(list)):
         elo_tournament(list[x], elo_system, player)
     add_informations(player)
-    player = sort_by_elo(player)
+    player = sort_by_elo(player, 0)
     player = check_same_name(player)
+    player = sort_by_elo(player, 1)
     x = 0
     char = []
     while x < len(player):

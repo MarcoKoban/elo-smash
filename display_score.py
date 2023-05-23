@@ -1,12 +1,15 @@
 import pygame
 
+interval = 50
+
 def load_images(lst):
     loaded_images = []
+    x = 48
     for item in lst:
         try:
             image_path = f"PNG-128/{item[1][2]}-128.png"
             image = pygame.image.load(image_path)
-            image = pygame.transform.scale(image, (16, 16))
+            image = pygame.transform.scale(image, (x, x / 1.5))
             loaded_images.append(image)
         except pygame.error:
             print(f"Unable to load the image {item[1][2]}.")
@@ -15,11 +18,12 @@ def load_images(lst):
 
 def load_character_images(lst):
     loaded_images = []
+    x = 96
     for item in lst:
         try:
             image_path = f"character_sprite/{item[1][3][0]}.png"
             image = pygame.image.load(image_path)
-            image = pygame.transform.scale(image, (32, 32))
+            image = pygame.transform.scale(image, (x, x / 1.77))
             loaded_images.append(image)
         except pygame.error:
             print(f"Unable to load the image {item[1][3][0]}.")
@@ -30,7 +34,6 @@ def display_placement(lst, window, scroll):
     font = pygame.font.Font(None, 48)
     x = 0
     y = 20 - scroll
-    interval = 30
     for i in range(len(lst)):
         text = font.render(str(i + 1), True, (0, 0, 0))
         window.blit(text, (x, y))
@@ -40,7 +43,6 @@ def display_tag(lst, window, scroll):
     font = pygame.font.Font(None, 48)
     x = 80
     y = 20 - scroll
-    interval = 30
     for i in range(len(lst)):
         text = font.render(lst[i][1][1], True, (0, 0, 0))
         window.blit(text, (x, y))
@@ -50,7 +52,6 @@ def display_elo(lst, window, scroll):
     font = pygame.font.Font(None, 48)
     x = 400
     y = 20 - scroll
-    interval = 30
     for i in range(len(lst)):
         text = font.render(str(int(lst[i][1][0][0])), True, (0, 0, 0))
         window.blit(text, (x, y))
@@ -59,7 +60,6 @@ def display_elo(lst, window, scroll):
 def display_flag(lst, window, scroll, loaded_images):
     x = 550
     y = 20 - scroll
-    interval = 30
     for i in range(len(lst)):
         image = loaded_images[i]
         if image is not None:
@@ -67,9 +67,8 @@ def display_flag(lst, window, scroll, loaded_images):
         y += interval
 
 def display_character(lst, window, scroll, loaded_images):
-    x = 600
-    y = 20 - scroll
-    interval = 30
+    x = 625
+    y = 20 - scroll - 10
     for i in range(len(lst)):
         image = loaded_images[i]
         if image is not None:
@@ -78,12 +77,12 @@ def display_character(lst, window, scroll, loaded_images):
 
 def scrolling(scroll_speed, scroll, height, length):
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_UP]:
+    if keys[pygame.K_UP] and scroll > 0:
         scroll -= scroll_speed * 2
-    if keys[pygame.K_DOWN]:
+    if keys[pygame.K_DOWN] and scroll < length * interval - height + 50:
         scroll += scroll_speed * 2
     mouse = pygame.mouse.get_pos()
-    if mouse[1] >= height - 50 and scroll < 30 * (length - 19): 
+    if mouse[1] >= height - 50 and scroll < length * interval - height + 50:
         scroll += scroll_speed * 2
     if mouse[1] <= 50 and scroll > 0:
         scroll -= scroll_speed * 2
